@@ -1,9 +1,13 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import os
 
+
+current_directory = os.getcwd()
+print("Répertoire de travail actuel :", current_directory)
 # Charger les images
 image_reference = plt.imread("./fichierImage/8.png")
-image_to_compare = plt.imread('2.png')
+image_to_compare = plt.imread('./fichierImage/2.png')
 print('Chemin de l\'image de référence :', '1.png')
 # Assurez-vous que l'image est au format BGR, vous pouvez la convertir en RGB si nécessaire
 
