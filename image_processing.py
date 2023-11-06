@@ -10,7 +10,7 @@ def compare_plate_sizes(w1, h1, w2, h2):
     else:
         return "de taille égale"
 
-def analyze_images(image1, image2, filename1, filename2):
+def process_image(image1, image2, filename1, filename2):
     # Convertir les images en niveaux de gris
     image1_gray = cv2.cvtColor(image1, cv2.COLOR_BGR2GRAY)
     image2_gray = cv2.cvtColor(image2, cv2.COLOR_BGR2GRAY)
@@ -59,14 +59,3 @@ def analyze_images(image1, image2, filename1, filename2):
     # Attendre une touche et fermer les fenêtres d'affichage
     cv2.waitKey(0)
     cv2.destroyAllWindows()
-
-# Charger les images que vous souhaitez analyser
-image1 = cv2.imread("./fichierImage/1.png")
-image2 = cv2.imread("./fichierImage/2.png")
-
-# Récupérer les noms de fichiers avec extension
-filename1 = os.path.basename("./fichierImage/66.png")
-filename2 = os.path.basename("./fichierImage/6.png")
-
-# Appeler la fonction pour analyser les images
-analyze_images(image1, image2, filename1, filename2)
