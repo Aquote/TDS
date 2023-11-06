@@ -1,14 +1,22 @@
-import numpy as np
 import cv2
-import os
 
 def compare_plate_sizes(w1, h1, w2, h2):
-    if w1 < w2 and h1 < h2:
+    if w2 < w1 and h2 < h1:
         return "plus petite"
-    elif w1 > w2 and h1 > h2:
+    elif w2 > w1 and h2 > h1:
         return "plus grande"
     else:
         return "de taille égale"
+
+def determine_plate_orientation(contours):
+    angle = 0  # Angle par défaut
+
+    if len(contours) > 4:
+        # Si suffisamment de contours sont trouvés, calculez l'angle d'orientation
+        rect = cv2.minAreaRect(contours[0])
+        angle = rect[2]
+
+    return angle
 
 def process_image(image1, image2, filename1, filename2):
     # Convertir les images en niveaux de gris
@@ -19,18 +27,6 @@ def process_image(image1, image2, filename1, filename2):
     _, binary_mask1 = cv2.threshold(image1_gray, 135, 255, cv2.THRESH_BINARY)
     _, binary_mask2 = cv2.threshold(image2_gray, 135, 255, cv2.THRESH_BINARY)
 
-    # Créer des images vertes du même format que les images d'entrée
-    image1_green = np.zeros_like(image1)
-    image2_green = np.zeros_like(image2)
-
-    # Remplacer les parties blanches par du vert dans les images vertes
-    image1_green[:, :, 1] = 255  # Canal vert
-    image2_green[:, :, 1] = 255  # Canal vert
-
-    # Appliquer les masques pour marquer les parties blanches en vert
-    image_marked1 = cv2.add(image1, image1_green, mask=binary_mask1)
-    image_marked2 = cv2.add(image2, image2_green, mask=binary_mask2)
-
     # Identifier les contours dans les masques binaires
     contours1, _ = cv2.findContours(binary_mask1, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     contours2, _ = cv2.findContours(binary_mask2, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -40,22 +36,28 @@ def process_image(image1, image2, filename1, filename2):
     w2, h2 = 0, 0
 
     if len(contours1) > 0 and len(contours2) > 0:
-        # Le premier contour (contours[0]) est utilisé ici, vous pouvez boucler à travers les contours si nécessaire
         x1, y1, w1, h1 = cv2.boundingRect(contours1[0])
         x2, y2, w2, h2 = cv2.boundingRect(contours2[0])
 
         # Comparer les dimensions des plaques
         size_comparison = compare_plate_sizes(w1, h1, w2, h2)
-        print(f"La seconde plaque est {size_comparison} que la plaque de base.")
+        print(f"La plaque est {size_comparison} que la plaque de référence.")
 
+        # Déterminer l'orientation des plaques
+        orientation1 = determine_plate_orientation(contours1)
+        orientation2 = determine_plate_orientation(contours2)
+
+        print(f"Orientation de la plaque de référence : {orientation1} degrés")
+        print(f"Orientation de la deuxième plaque : {orientation2} degrés")
+        
     # Redimensionner les images pour les afficher en 600x500
-    resized_image1 = cv2.resize(image_marked1, (600, 500))
-    resized_image2 = cv2.resize(image_marked2, (600, 500))
+    resized_image1 = cv2.resize(image1, (600, 500))
+    resized_image2 = cv2.resize(image2, (600, 500))
 
-    # Afficher les images marquées redimensionnées avec les noms de fenêtre basés sur les noms de fichiers d'origine
-    cv2.imshow(filename1 + " avec filtre", resized_image1)
-    cv2.imshow(filename2 + " avec filtre", resized_image2)
+    # Afficher l'image marquée avec le nom du fichier
+    cv2.imshow(filename1, resized_image1)
+    cv2.imshow(filename2, resized_image2)
 
-    # Attendre une touche et fermer les fenêtres d'affichage
+    # Attendez une touche et fermez les fenêtres d'affichage
     cv2.waitKey(0)
     cv2.destroyAllWindows()
