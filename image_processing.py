@@ -1,13 +1,14 @@
+# -*- coding: utf-8 -*-
 import cv2
 import numpy as np
 
 def compare_plate_sizes(w1, h1, w2, h2):
     if w2 < w1 and h2 < h1:
-        return "plus petite"
+        return "plus petite que"
     elif w2 > w1 and h2 > h1:
-        return "plus grande"
+        return "plus grande  que"
     else:
-        return "de taille égale"
+        return "de taille egale a"
 
 def determine_plate_orientation(contours):
     angle = 0  # Angle par défaut
@@ -21,7 +22,7 @@ def determine_plate_orientation(contours):
 
 def process_image(image1, image2, filename1, filename2):
     
-     # Appliquer un filtre de lissage gaussien à l'image 1
+    # Appliquer un filtre de lissage gaussien à l'image 1
     image1_filtree = cv2.GaussianBlur(image1, (5, 5), 0)
     
     # Appliquer un filtre de lissage gaussien à l'image 2
@@ -61,14 +62,14 @@ def process_image(image1, image2, filename1, filename2):
 
         # Comparer les dimensions des plaques
         size_comparison = compare_plate_sizes(w1, h1, w2, h2)
-        print(f"La plaque est {size_comparison} que la plaque de référence.")
+        print(f"La plaque est {size_comparison} la plaque de reference.")
 
         # Déterminer l'orientation des plaques
         orientation1 = determine_plate_orientation(contours1)
         orientation2 = determine_plate_orientation(contours2)
 
-        print(f"Orientation de la plaque de référence : {orientation1} degrés")
-        print(f"Orientation de la deuxième plaque : {orientation2} degrés")
+        print(f"Orientation de la plaque de reference : {orientation1} degres")
+        print(f"Orientation de la deuxieme plaque : {orientation2} degres")
 
     # Redimensionner les images binaires pour les afficher en 600x500
     resized_image1 = cv2.resize(binary_mask1, (600, 500))
