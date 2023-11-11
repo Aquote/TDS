@@ -4,7 +4,7 @@ import numpy as np
 
 # Charger les deux images
 image1 = cv2.imread("fichierImage/1.png")
-image2 = cv2.imread("fichierImage/3.png")
+image2 = cv2.imread("fichierImage/6.png")
 
 # Assurez-vous que les images ont la même taille (redimensionnez ou recadrez si nécessaire)
 if image1.shape != image2.shape:

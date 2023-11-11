@@ -1,66 +1,56 @@
-# -*- coding: utf-8 -*-
 import cv2
 import numpy as np
 
-def determine_plate_orientation(contours):
-    angle = 0  # Angle par défaut
+def determine_plate_orientation(image_path):
+    """
+    Détermine l'angle d'orientation d'une plaque à partir d'une image.
 
-    if len(contours) > 4:
-        # Si suffisamment de contours sont trouvés, calculez l'angle d'orientation
-        rect = cv2.minAreaRect(contours[0])
-        angle = rect[2]
+    Parameters:
+    - image_path (str): Chemin vers le fichier image.
 
-    return angle
+    Returns:
+    - float or None: L'angle d'orientation de la plaque en degrés, ou None si la détection est impossible.
 
-def compare_plate_orientation(image1, image2, filename1, filename2):
-    # Appliquer un filtre de lissage gaussien à l'image 1
-    image1_filtree = cv2.GaussianBlur(image1, (5, 5), 0)
+    Processus :
+    1. Convertit l'image en niveaux de gris.
+    2. Applique une augmentation de contraste en utilisant l'égalisation d'histogramme.
+    3. Utilise la détection de coins Shi-Tomasi pour trouver les coins significatifs.
+    4. Sélectionne les coins les plus éloignés pour déterminer la diagonale de la plaque.
+    5. Dessine une ligne entre les coins sélectionnés.
+    6. Calcule l'angle d'orientation en degrés à partir de la ligne.
+    """
+    # Charger l'image
+    image = cv2.imread(image_path)
 
-    # Appliquer un filtre de lissage gaussien à l'image 2
-    image2_filtree = cv2.GaussianBlur(image2, (5, 5), 0)
+    # Convertir l'image en niveaux de gris
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-    # Convertir les images en niveaux de gris
-    image1_gray = cv2.cvtColor(image1_filtree, cv2.COLOR_BGR2GRAY)
-    image2_gray = cv2.cvtColor(image2_filtree, cv2.COLOR_BGR2GRAY)
+    # Appliquer une augmentation de contraste en utilisant l'égalisation d'histogramme
+    equalized = cv2.equalizeHist(gray)
 
-    # Appliquer le seuillage pour binariser les images et obtenir des masques des parties blanches
-    _, binary_mask1 = cv2.threshold(image1_gray, 135, 255, cv2.THRESH_BINARY)
-    _, binary_mask2 = cv2.threshold(image2_gray, 135, 255, cv2.THRESH_BINARY)
+    # Appliquer la détection de coins Shi-Tomasi
+    corners = cv2.goodFeaturesToTrack(equalized, maxCorners=100, qualityLevel=0.01, minDistance=10)
 
-    # Identifier les contours dans les masques binaires
-    contours1, _ = cv2.findContours(binary_mask1, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    contours2, _ = cv2.findContours(binary_mask2, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    # Convertir les coordonnées des coins en entiers
+    corners = np.int0(corners)
 
-    # Définir des valeurs par défaut si aucun contour n'est trouvé
-    angle1 = 0
-    angle2 = 0
+    # Dessiner les coins sur l'image
+    for corner in corners:
+        x, y = corner.ravel()
+        cv2.circle(image, (x, y), 3, 255, -1)
 
-    if len(contours1) > 0 and len(contours2) > 0:
-        # Déterminer l'orientation des plaques
-        angle1 = determine_plate_orientation(contours1)
-        angle2 = determine_plate_orientation(contours2)
+    # Calculer l'orientation de la plaque
+    if len(corners) >= 4:
+        # Sélectionner les coins les plus éloignés
+        top_left = min(corners, key=lambda corner: corner[0][0] + corner[0][1])
+        bottom_right = max(corners, key=lambda corner: corner[0][0] + corner[0][1])
 
-        print(f"Orientation de {filename1}: {angle1} degrés")
-        print(f"Orientation de {filename2}: {angle2} degrés")
+        # Dessiner une ligne entre les coins sélectionnés
+        cv2.line(image, (top_left[0][0], top_left[0][1]), (bottom_right[0][0], bottom_right[0][1]), (0, 255, 0), 2)
 
-    return angle1, angle2
+        # Calculer l'angle d'orientation
+        angle = np.arctan2(bottom_right[0][1] - top_left[0][1], bottom_right[0][0] - top_left[0][0]) * 180 / np.pi
 
-# Charger vos images ici (image1 et image2)
-# image1 = cv2.imread("nom_de_votre_image1.jpg")
-# image2 = cv2.imread("nom_de_votre_image2.jpg")
-
-# Remplacez "nom_de_votre_image1.jpg" et "nom_de_votre_image2.jpg" par les noms de vos fichiers d'images
-
-# Appeler la fonction de comparaison
-# angle_image1, angle_image2 = compare_plate_orientation(image1, image2, "nom_image1", "nom_image2")
-
-# Afficher les résultats
-# print(f"Comparaison d'orientation :")
-# if angle_image1 < 45 or angle_image1 > 135:
-#     print("Image 1 est en mode portrait")
-# else:
-#     print("Image 1 est en mode paysage")
-# if angle_image2 < 45 or angle_image2 > 135:
-#     print("Image 2 est en mode portrait")
-# else:
-#     print("Image 2 est en mode paysage")
+        return angle
+    else:
+        return None

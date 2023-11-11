@@ -85,6 +85,7 @@ class ImageComparatorApp(tk.Tk):
             self.treeview.delete(*self.treeview.get_children())  # Effacez toutes les entrées précédentes
             reference_filename = self.reference_name.get()
             self.treeview.insert("", "end", text="Référence", values=(reference_filename, "", "", "", ""))
+            self.display_image(self,reference_file,True)
     def display_image(self, image, is_reference=False):
             # Convertissez l'image NumPy en format d'image PIL pour affichage
             image_pil = Image.fromarray(image)
