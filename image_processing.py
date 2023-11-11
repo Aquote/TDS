@@ -1,84 +1,84 @@
-# -*- coding: utf-8 -*-
 import cv2
-import numpy as np
+
+def resize_image(image, target_width, target_height):
+    """Redimensionne l'image à la taille cible."""
+    return cv2.resize(image, (target_width, target_height))
+
+def increase_contrast(image):
+    """Augmente le contraste de l'image en utilisant l'égalisation d'histogramme."""
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    equalized = cv2.equalizeHist(gray)
+    contrasted = cv2.merge([equalized, equalized, equalized])
+    return contrasted
+
+def edge_detection(image):
+    """Applique la détection de bord à l'image."""
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    edges = cv2.Canny(gray, 50, 150)
+    return edges
+
+def find_contours(image):
+    """Trouve les contours dans l'image."""
+    contours, _ = cv2.findContours(image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    return contours
+
+def draw_contours(image, contours):
+    """Dessine les contours sur l'image."""
+    drawn_image = image.copy()
+    cv2.drawContours(drawn_image, contours, -1, (0, 255, 0), 2)
+    return drawn_image
+
+def compare_plate_size_percentage(w, h, ref_w, ref_h):
+    """Compare les dimensions de la plaque par rapport à la plaque de référence."""
+    percent_w = (w / ref_w) * 100
+    percent_h = (h / ref_h) * 100
+    return percent_w, percent_h
+
+def compare_plate_size(w, h, ref_width, ref_height):
+    """Compare les dimensions de la plaque par rapport à la plaque de référence."""
+    plate_size_comparison = compare_plate_sizes(w, h, ref_width, ref_height)
+    return plate_size_comparison
 
 def compare_plate_sizes(w1, h1, w2, h2):
+    """Compare les dimensions de deux plaques."""
     if w2 < w1 and h2 < h1:
         return "plus petite que"
     elif w2 > w1 and h2 > h1:
-        return "plus grande  que"
+        return "plus grande que"
     else:
         return "de taille egale a"
 
-def determine_plate_orientation(contours):
-    angle = 0  # Angle par défaut
+# Charger vos images ici (image et ref_image)
+image_path = "./fichierImage/1.png"
+ref_image_path = "./fichierImage/2.png"
 
-    if len(contours) > 4:
-        # Si suffisamment de contours sont trouvés, calculez l'angle d'orientation
-        rect = cv2.minAreaRect(contours[0])
-        angle = rect[2]
+# Définir les dimensions de la plaque de référence (à titre d'exemple)
+ref_width = 100
+ref_height = 100
 
-    return angle
+# Charger les images
+image = cv2.imread(image_path)
+ref_image = cv2.imread(ref_image_path)
 
-def process_image(image1, image2, filename1, filename2):
-    
-    # Appliquer un filtre de lissage gaussien à l'image 1
-    image1_filtree = cv2.GaussianBlur(image1, (5, 5), 0)
-    
-    # Appliquer un filtre de lissage gaussien à l'image 2
-    image2_filtree = cv2.GaussianBlur(image2, (5, 5), 0)
-    
-    # Convertir les images en niveaux de gris
-    image1_gray = cv2.cvtColor(image1_filtree, cv2.COLOR_BGR2GRAY)
-    image2_gray = cv2.cvtColor(image2_filtree, cv2.COLOR_BGR2GRAY)
+# Appeler la fonction de comparaison pour l'image
+w, h, drawn_image = compare_plate_size(image_path, ref_width, ref_height, "nom_image")
+# Redimensionner les images
+resized_image = resize_image(drawn_image, 600, 400)
 
-    # Appliquer le seuillage pour binariser les images et obtenir des masques des parties blanches
-    _, binary_mask1 = cv2.threshold(image1_gray, 135, 255, cv2.THRESH_BINARY)
-    _, binary_mask2 = cv2.threshold(image2_gray, 135, 255, cv2.THRESH_BINARY)
+# Afficher les résultats
+print(f"Dimensions de l'image : Largeur = {w}, Hauteur = {h}")
 
-    # Créer des images vertes du même format que les images d'entrée
-    image1_green = np.zeros_like(image1_filtree)
-    image2_green = np.zeros_like(image2_filtree)
+# Appeler la fonction de comparaison pour l'image de référence
+ref_w, ref_h, ref_drawn_image = compare_plate_size(ref_width, ref_height, ref_width, ref_height)
 
-    # Remplacer les parties blanches par du vert dans les images vertes
-    image1_green[:, :, 1] = 255  # Canal vert
-    image2_green[:, :, 1] = 255  # Canal vert
+# Redimensionner les images
+resized_ref_image = resize_image(ref_drawn_image, 600, 400)
 
-    # Appliquer les masques pour marquer les parties blanches en vert
-    image_marked1 = cv2.add(image1_filtree, image1_green, mask=binary_mask1)
-    image_marked2 = cv2.add(image2_filtree, image2_green, mask=binary_mask2)
+# Afficher les résultats
+print(f"Dimensions de l'image de référence : Largeur = {ref_w}, Hauteur = {ref_h}")
 
-    # Identifier les contours dans les masques binaires
-    contours1, _ = cv2.findContours(binary_mask1, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    contours2, _ = cv2.findContours(binary_mask2, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    # Reste du code inchangé...
-    # Définir des valeurs par défaut si aucun contour n'est trouvé
-    w1, h1 = 0, 0
-    w2, h2 = 0, 0
-
-    if len(contours1) > 0 and len(contours2) > 0:
-        x1, y1, w1, h1 = cv2.boundingRect(contours1[0])
-        x2, y2, w2, h2 = cv2.boundingRect(contours2[0])
-
-        # Comparer les dimensions des plaques
-        size_comparison = compare_plate_sizes(w1, h1, w2, h2)
-        print(f"La plaque est {size_comparison} la plaque de reference.")
-
-        # Déterminer l'orientation des plaques
-        orientation1 = determine_plate_orientation(contours1)
-        orientation2 = determine_plate_orientation(contours2)
-
-        print(f"Orientation de la plaque de reference : {orientation1} degres")
-        print(f"Orientation de la deuxieme plaque : {orientation2} degres")
-
-    # Redimensionner les images binaires pour les afficher en 600x500
-    resized_image1 = cv2.resize(binary_mask1, (600, 500))
-    resized_image2 = cv2.resize(binary_mask2, (600, 500))
-
-    # Afficher l'image binaire avec le nom du fichier
-    cv2.imshow(filename1, resized_image1)
-    cv2.imshow(filename2, resized_image2)
-
-    # Attendez une touche et fermez les fenêtres d'affichage
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+# Afficher l'image avec les contours dessinés
+cv2.imshow("Contours Image", resized_image)
+cv2.imshow("Contours Image de Référence", resized_ref_image)
+cv2.waitKey(0)
+cv2.destroyAllWindows()

@@ -1,58 +1,96 @@
-# -*- coding: utf-8 -*-
 import cv2
 import numpy as np
+import json
+import os
 
-def compare_plate_sizes(w1, h1, w2, h2):
-    if w2 < w1 and h2 < h1:
-        return "plus petite que"
-    elif w2 > w1 and h2 > h1:
-        return "plus grande que"
+def measure_contour_dimensions(image_path):
+    """
+    Mesure les dimensions totales des contours dans une image et enregistre le résultat dans un fichier JSON.
+
+    Parameters:
+        image_path (str): Le chemin de l'image à traiter.
+
+    Returns:
+        dict: Un dictionnaire contenant les dimensions totales (longueur et largeur) des contours.
+
+    Steps:
+         1. Charger l'image en couleur.
+        2. Convertir l'image en niveaux de gris pour simplifier le traitement.
+        3. Appliquer une opération de fermeture pour éliminer le bruit dans l'image.
+        4. Appliquer une opération de dilatation pour rendre les contours plus visibles.
+        5. Soustraire la dilatation de l'image fermée pour obtenir les contours.
+        6. Seuiller l'image pour obtenir une image binaire avec des contours.
+        7. Trouver les contours dans l'image binaire.
+        8. Parcourir tous les contours trouvés.
+        9. Mesurer les dimensions du rectangle englobant (bounding box) de chaque contour.
+        10. Ajouter les dimensions au total pour obtenir les dimensions totales.
+        11. Charger le contenu actuel du fichier JSON ou créer un dictionnaire vide si le fichier est vide.
+        12. Ajouter ou mettre à jour les informations spécifiques pour l'image actuelle.
+        13. Enregistrer le dictionnaire mis à jour dans le fichier JSON (data.json).
+        14. Renvoyer le dictionnaire des dimensions totales.
+    """
+    # Charger l'image en couleur
+    image = cv2.imread(image_path)
+
+    # Convertir l'image en niveaux de gris
+    gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+    # Appliquer une opération de fermeture pour éliminer le bruit
+    kernel = np.ones((3, 3), np.uint8)
+    closing = cv2.morphologyEx(gray_image, cv2.MORPH_CLOSE, kernel)
+
+    # Appliquer une opération de dilatation
+    dilated = cv2.dilate(closing, kernel, iterations=2)
+
+    # Soustraire la dilatation de l'image fermée pour obtenir les contours
+    contour_image = cv2.absdiff(dilated, closing)
+
+    # Seuiller l'image pour obtenir une image binaire
+    _, thresh = cv2.threshold(contour_image, 30, 255, cv2.THRESH_BINARY)
+
+    # Trouver les contours
+    contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+    # Initialiser les variables pour stocker les dimensions totales
+    total_length = 0
+    total_width = 0
+
+    # Parcourir tous les contours
+    for contour in contours:
+        # Mesurer les dimensions du contour
+        x, y, w, h = cv2.boundingRect(contour)
+
+        # Ajouter les dimensions au total
+        total_length += w
+        total_width += h
+
+    # Créer un dictionnaire avec les dimensions totales
+    dimensions_data = {
+        "longueur_totale": total_length,
+        "largeur_totale": total_width
+    }
+
+    # Obtenez le nom du fichier avec l'extension
+    filename = os.path.basename(image_path)
+
+    # Charger le contenu actuel du fichier JSON ou créer un dictionnaire vide si le fichier est vide
+    if os.path.exists("data.json") and os.stat("data.json").st_size != 0:
+        with open("data.json", "r") as json_file:
+            json_data += json.load(json_file)
     else:
-        return "de taille egale a"
+        json_data = {}
 
-def compare_plate_size(image1, image2, filename1, filename2):
-    # Appliquer un filtre de lissage gaussien à l'image 1
-    image1_filtree = cv2.GaussianBlur(image1, (5, 5), 0)
+    # Ajouter ou mettre à jour les informations spécifiques pour l'image actuelle
+    json_data[filename] = dimensions_data
 
-    # Appliquer un filtre de lissage gaussien à l'image 2
-    image2_filtree = cv2.GaussianBlur(image2, (5, 5), 0)
+    # Enregistrez le dictionnaire mis à jour dans le fichier JSON
+    with open("data.json", "w") as json_file:
+        json.dump(json_data, json_file)
 
-    # Convertir les images en niveaux de gris
-    image1_gray = cv2.cvtColor(image1_filtree, cv2.COLOR_BGR2GRAY)
-    image2_gray = cv2.cvtColor(image2_filtree, cv2.COLOR_BGR2GRAY)
 
-    # Appliquer le seuillage pour binariser les images et obtenir des masques des parties blanches
-    _, binary_mask1 = cv2.threshold(image1_gray, 135, 255, cv2.THRESH_BINARY)
-    _, binary_mask2 = cv2.threshold(image2_gray, 135, 255, cv2.THRESH_BINARY)
+    return dimensions_data
 
-    # Identifier les contours dans les masques binaires
-    contours1, _ = cv2.findContours(binary_mask1, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    contours2, _ = cv2.findContours(binary_mask2, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-    # Définir des valeurs par défaut si aucun contour n'est trouvé
-    w1, h1 = 0, 0
-    w2, h2 = 0, 0
-
-    if len(contours1) > 0 and len(contours2) > 0:
-        x1, y1, w1, h1 = cv2.boundingRect(contours1[0])
-        x2, y2, w2, h2 = cv2.boundingRect(contours2[0])
-
-        # Comparer les dimensions des plaques
-        size_comparison = compare_plate_sizes(w1, h1, w2, h2)
-        print(f"La plaque est {size_comparison} la plaque de reference.")
-
-    return w1, h1, w2, h2
-
-# Charger vos images ici (image1 et image2)
-# image1 = cv2.imread("nom_de_votre_image1.jpg")
-# image2 = cv2.imread("nom_de_votre_image2.jpg")
-
-# Remplacez "nom_de_votre_image1.jpg" et "nom_de_votre_image2.jpg" par les noms de vos fichiers d'images
-
-# Appeler la fonction de comparaison
-# w1, h1, w2, h2 = compare_plate_size(image1, image2, "nom_image1", "nom_image2")
-
-# Afficher les résultats
-# print(f"Comparaison de la taille des plaques :")
-# print(f"Dimensions de {filename1}: Largeur = {w1}, Hauteur = {h1}")
-# print(f"Dimensions de {filename2}: Largeur = {w2}, Hauteur = {h2}")
+image_path = "./fichierImage/3.png"
+result = measure_contour_dimensions(image_path)
+print("Dimensions mesurées :", result)

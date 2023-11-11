@@ -1,3 +1,5 @@
+import json
+import os
 import cv2
 import numpy as np
 
@@ -51,6 +53,30 @@ def determine_plate_orientation(image_path):
         # Calculer l'angle d'orientation
         angle = np.arctan2(bottom_right[0][1] - top_left[0][1], bottom_right[0][0] - top_left[0][0]) * 180 / np.pi
 
-        return angle
+    # Obtenez le nom du fichier avec l'extension
+    filename = os.path.basename(image_path)
+
+    # Charger le contenu actuel du fichier JSON ou créer un dictionnaire vide si le fichier est vide
+    if os.path.exists("data.json") and os.stat("data.json").st_size != 0:
+        with open("data.json", "r") as json_file:
+            json_data = json.load(json_file)
     else:
-        return None
+        json_data = {}
+
+    # Ajouter ou mettre à jour les informations spécifiques pour l'image actuelle
+    json_data.setdefault(filename, {}).update({"orientation": angle})
+
+    # Enregistrez le dictionnaire mis à jour dans le fichier JSON
+    with open("data.json", "w") as json_file:
+        json.dump(json_data, json_file)
+
+    return angle
+
+
+"""image_path = "./fichierImage/3.png"
+orientation_angle = determine_plate_orientation(image_path)
+
+if orientation_angle is not None:
+    print(f"L'angle d'orientation de la plaque est : {orientation_angle} degrés.")
+else:
+    print("Impossible de déterminer l'orientation de la plaque.")"""
