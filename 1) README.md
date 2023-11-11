@@ -17,3 +17,25 @@ Les tests se déroulent en deux étapes principales :
 L'objectif ultime de ce projet est de fournir une solution robuste pour l'évaluation des plaques et d'automatiser ce processus de manière efficace. Pour plus d'informations sur l'utilisation de ce système et son intégration dans votre application, veuillez consulter la documentation associée.
 
 N'hésitez pas à contribuer au projet en ouvrant des issues, en proposant des améliorations ou en soumettant des pull requests. Votre participation est grandement appréciée.
+
+
+
+
+## Première entrevue avec les profs:
+
+### Pistes
+
+* inverser la binarisation de l'image afin d'avoir les défauts en blanc + labelisation pour les trous (voir dans le cours théorique)
+* dilatation et érosion
+* augmenter le contraste pour augmenter la qualité
+* songer à peut être boucher les petits trous pour les plaques brunes afin de déterminer si la plaque a des défauts ou pas
+
+### Travail à faire
+
+1) [ ] Plutôt que de faire un filtre gaussien pour avoir une image plus nette on doit pouvoir augmenter le contraste
+2) [ ] finaliser la plate_size
+3) [ ] finaliser la plate_orientation
+4) [ ] finaliser le plate_color
+5) [ ] finaliser la plate_holes
+6) [ ] finaliser la gui
+7) [ ] La gui doit effectuer les différents test et afficher les résultats
