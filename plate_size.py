@@ -91,6 +91,6 @@ def measure_contour_dimensions(image_path):
     return dimensions_data
 
 
-image_path = "./fichierImage/3.png"
+image_path = "./fichierImage/6.png"
 result = measure_contour_dimensions(image_path)
 print("Dimensions mesurées :", result)
