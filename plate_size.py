@@ -76,7 +76,7 @@ def measure_contour_dimensions(image_path):
     # Charger le contenu actuel du fichier JSON ou créer un dictionnaire vide si le fichier est vide
     if os.path.exists("data.json") and os.stat("data.json").st_size != 0:
         with open("data.json", "r") as json_file:
-            json_data += json.load(json_file)
+            json_data = json.load(json_file)
     else:
         json_data = {}
 
@@ -91,6 +91,6 @@ def measure_contour_dimensions(image_path):
     return dimensions_data
 
 
-image_path = "./fichierImage/6.png"
+image_path = "./fichierImage/8.png"
 result = measure_contour_dimensions(image_path)
 print("Dimensions mesurées :", result)

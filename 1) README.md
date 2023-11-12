@@ -18,9 +18,6 @@ L'objectif ultime de ce projet est de fournir une solution robuste pour l'évalu
 
 N'hésitez pas à contribuer au projet en ouvrant des issues, en proposant des améliorations ou en soumettant des pull requests. Votre participation est grandement appréciée.
 
-
-
-
 ## Première entrevue avec les profs:
 
 ### Pistes
@@ -32,10 +29,10 @@ N'hésitez pas à contribuer au projet en ouvrant des issues, en proposant des a
 
 ### Travail à faire
 
-1) [ ] Plutôt que de faire un filtre gaussien pour avoir une image plus nette on doit pouvoir augmenter le contraste
-2) [ ] finaliser la plate_size
-3) [ ] finaliser la plate_orientation
-4) [ ] finaliser le plate_color
+1) [X] Plutôt que de faire un filtre gaussien pour avoir une image plus nette on doit pouvoir augmenter le contraste
+2) [X] finaliser la plate_size
+3) [X] finaliser la plate_orientation
+4) [X] finaliser le plate_color
 5) [ ] finaliser la plate_holes
 6) [ ] finaliser la gui
 7) [ ] La gui doit effectuer les différents test et afficher les résultats

@@ -76,4 +76,3 @@ if plate_color is not None:
     print(f"La plaque est de couleur : {plate_color}")
 else:
     print("Impossible de déterminer la couleur de la plaque.")
-
