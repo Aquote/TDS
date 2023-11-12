@@ -52,6 +52,7 @@ def determine_plate_orientation(image_path):
 
         # Calculer l'angle d'orientation
         angle = np.arctan2(bottom_right[0][1] - top_left[0][1], bottom_right[0][0] - top_left[0][0]) * 180 / np.pi
+        angle = round(angle,3)
 
     # Obtenez le nom du fichier avec l'extension
     filename = os.path.basename(image_path)
