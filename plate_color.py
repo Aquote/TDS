@@ -1,63 +1,69 @@
 import cv2
 import numpy as np
-from sklearn.cluster import KMeans
-import os
 import json
+import os
 
-def detect_defauts(image_path):
-    image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+def determine_plate_color(image_path, screen=False):
+    """
+    Détermine la couleur dominante d'une plaque d'immatriculation à partir d'une image.
+
+    Paramètres :
+    - image_path (str) : Chemin vers le fichier image.
+    - screen (bool) : Si True, affiche l'image avec les masques blanc et brun.
+
+    Renvoie :
+    - str ou None : "Blanche" si la plaque est de couleur blanche (crème), "Brune" si la plaque est de couleur brune (carton), ou None si la détection est impossible.
+    """
+    image = cv2.imread(image_path)
+    lab_image = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
+
+    # Redimensionner l'image à 600x400 pixels
     image = cv2.resize(image, (600, 400))
-    image_blur = cv2.GaussianBlur(image, (5, 5), 0)
-    edges = cv2.Canny(image_blur, 50, 150)
-    contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    min_contour_size = 20
 
-    if contours:
-        filtered_contours = [cnt for cnt in contours if cv2.contourArea(cnt) > min_contour_size and 50 < cnt[0][0][0] < 550 and 50 < cnt[0][0][1] < 350]
-        plaque_mask = np.zeros_like(image, dtype=np.uint8)
-        cv2.drawContours(plaque_mask, filtered_contours, -1, 255, thickness=cv2.FILLED)
-        points_noirs = []
-        
-        for y in range(image.shape[0]):
-            for x in range(image.shape[1]):
-                if cv2.pointPolygonTest(np.concatenate(filtered_contours), (x, y), False) > 0:
-                    if image[y, x] < 100:
-                        points_noirs.append((x, y))
-        
-        points_noirs_array = np.array(points_noirs)
-        num_clusters = 5
+    lower_white = np.array([200, 128, 128], dtype=np.uint8)
+    upper_white = np.array([255, 143, 143], dtype=np.uint8)
 
-        if len(points_noirs_array) >= num_clusters:
-            kmeans = KMeans(n_clusters=num_clusters, random_state=42)
-            kmeans.fit(points_noirs_array)
-            cluster_centers = kmeans.cluster_centers_.astype(int)
-            
-            # Obtenez le nom du fichier avec l'extension
-            filename = os.path.basename(image_path)
+    lower_brown = np.array([20, 128, 128], dtype=np.uint8)
+    upper_brown = np.array([40, 143, 143], dtype=np.uint8)
 
-            # Charger le contenu actuel du fichier JSON ou créer un dictionnaire vide si le fichier est vide
-            if os.path.exists("data.json") and os.stat("data.json").st_size != 0:
-                with open("data.json", "r") as json_file:
-                    json_data = json.load(json_file)
-            else:
-                json_data = {}
+    white_mask = cv2.inRange(lab_image, lower_white, upper_white)
+    brown_mask = cv2.inRange(lab_image, lower_brown, upper_brown)
 
-            # Ajouter ou mettre à jour les informations spécifiques pour l'image actuelle
-            json_data.setdefault(filename, {}).update({"centres_clusters": cluster_centers.tolist()})
+    white_pixel_count = cv2.countNonZero(white_mask)
+    brown_pixel_count = cv2.countNonZero(brown_mask)
 
-            # Enregistrez le dictionnaire mis à jour dans le fichier JSON
-            with open("data.json", "w") as json_file:
-                json.dump(json_data, json_file)
+    if white_pixel_count > brown_pixel_count:
+        plate_color = "Blanche"
+    elif brown_pixel_count > white_pixel_count:
+        plate_color = "Brune"
+    else:
+        plate_color = "Erreur"
 
-            return cluster_centers.tolist()
+    if screen:
+        cv2.imshow("Image originale", image)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
 
-    return None
+    filename = os.path.basename(image_path)
 
-# Exemple d'utilisation :
-image_path_example = "fichierImage/8.png"
-centres_clusters = detect_defauts(image_path_example)
+    if os.path.exists("data.json") and os.stat("data.json").st_size != 0:
+        with open("data.json", "r") as json_file:
+            json_data = json.load(json_file)
+    else:
+        json_data = {}
 
-if centres_clusters is not None:
-    print("Coordonnées des centres des clusters :", centres_clusters)
+    json_data.setdefault(filename, {}).update({"couleur": plate_color})
+
+    with open("data.json", "w") as json_file:
+        json.dump(json_data, json_file)
+
+    return plate_color
+
+# Exemple d'utilisation
+image_path = "./fichierImage/6.png"
+plate_color = determine_plate_color(image_path, screen=True)
+
+if plate_color is not None:
+    print(f"La plaque est de couleur : {plate_color}")
 else:
-    print("Pas de contour détecté sur l'image ou pas assez de points noirs pour effectuer le regroupement.")
+    print("Impossible de déterminer la couleur de la plaque.")

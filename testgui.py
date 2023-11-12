@@ -1,202 +1,114 @@
 import os
 import tkinter as tk
 from tkinter import ttk, filedialog
-from PIL import Image, ImageTk
-from skimage import io
-from skimage.metrics import structural_similarity as ssim
 
-class ImageComparatorApp(tk.Tk):
+class MaFenetre(tk.Tk):
     def __init__(self):
         super().__init__()
-        self.title("Image Comparator")
+
+        self.title("Ma Fenêtre")
         self.geometry("1200x600")
 
-        self.base_image = None
-        self.other_images = []
-        self.last_clicked_image = None  # Nouvelle variable
-        self.comparison_results = {}  # Dictionnaire pour stocker les résultats de comparaison
+        self.creer_interface()
 
-        self.initialize_ui()
+    def creer_interface(self):
+        # ... (autre code)
 
-    def initialize_ui(self):
-        main_frame = tk.Frame(self)
-        main_frame.pack(expand=True, fill=tk.BOTH)
+        # Bouton Charger Référence
+        bouton_charger_ref = tk.Button(self, text="Charger référence", command=self.charger_reference)
+        bouton_charger_ref.grid(row=0, column=0, padx=10, pady=10, sticky="w")
 
-        images_frame = tk.Frame(main_frame)
-        images_frame.pack(side=tk.TOP, fill=tk.X)
+        # Bouton Charger Image
+        bouton_charger_img = tk.Button(self, text="Charger image", command=self.charger_image)
+        bouton_charger_img.grid(row=0, column=1, padx=10, pady=10, sticky="w")
 
-        self.reference_name = tk.StringVar()
-        reference_entry = tk.Entry(images_frame, textvariable=self.reference_name, state='readonly')
-        reference_entry.pack(side=tk.LEFT, padx=10)
+        # Bouton Comparer
+        bouton_comparer = tk.Button(self, text="Comparer", command=lambda: self.comparer(
+            checkbox_orientation.get(),
+            checkbox_couleur.get(),
+            checkbox_taille.get(),
+            checkbox_defauts.get()
+        ))
+        bouton_comparer.grid(row=0, column=2, padx=10, pady=10, sticky="w")  # Utiliser column=2 au lieu de column=1
 
-        add_reference_button = tk.Button(images_frame, text="Ajouter Référence", command=self.add_reference_image)
-        add_reference_button.pack(side=tk.LEFT, padx=10)
+        # Checkboxes avec valeur par défaut cochée
+        Orientation_value =tk.IntVar(value=1)
+        checkbox_orientation = tk.Checkbutton(self, text="Orientation",variable=Orientation_value)
+        self.checkbox_orientation.select()
+        checkbox_orientation.grid(row=0, column=3, padx=10, pady=10, sticky="e")
 
-        remove_reference_button = tk.Button(images_frame, text="Supprimer Référence", command=self.remove_reference_image)
-        remove_reference_button.pack(side=tk.LEFT, padx=10)
+        Couleur_value =tk.IntVar(value=1)
+        checkbox_couleur = tk.Checkbutton(self, text="Couleur", state="active",variable=Couleur_value)
+        self.checkbox_couleur.select()
+        checkbox_couleur.grid(row=0, column=4, padx=10, pady=10, sticky="e")
 
-        self.image_labels = []
-        self.reference_label = None
+        Taille_value= tk.IntVar(value=1)
+        checkbox_taille = tk.Checkbutton(self, text="Taille",variable=Taille_value )
+        self.checkbox_taille.select()
+        checkbox_taille.grid(row=0, column=5, padx=10, pady=10, sticky="e")
 
-        # Créez un Treeview pour afficher les données
-        self.treeview = ttk.Treeview(main_frame, columns=("Nom", "Orientation", "Taille", "Couleur", "Similarité"))
-        self.treeview.heading("#1", text="Nom")
-        self.treeview.heading("#2", text="Orientation")
-        self.treeview.heading("#3", text="Taille")
-        self.treeview.heading("#4", text="Couleur")
-        self.treeview.heading("#5", text="Défauts")
-        self.treeview.pack(expand=True, fill="both")
+        Défauts_value= tk.IntVar(value=1)
+        checkbox_defauts = tk.Checkbutton(self, text="Défauts",variable=Défauts_value)
+        self.checkbox_taille.select()
+        checkbox_defauts.grid(row=0, column=6, padx=10, pady=10, sticky="e")
 
-        buttons_frame = tk.Frame(main_frame)
-        buttons_frame.pack(side=tk.BOTTOM, pady=10)
+        # Treeview
+        self.treeview = ttk.Treeview(self, columns=("Référence","Nom" ,"Orientation", "Couleur", "Taille", "Défauts"), show="headings")
+        self.treeview.heading("Référence", text="Référence", anchor="center")
+        self.treeview.heading("Nom", text="Nom", anchor="center")
+        self.treeview.heading("Orientation", text="Orientation", anchor="center")
+        self.treeview.heading("Couleur", text="Couleur", anchor="center")
+        self.treeview.heading("Taille", text="Taille", anchor="center")
+        self.treeview.heading("Défauts", text="Défauts", anchor="center")
+        self.treeview.grid(row=1, column=0, columnspan=6, padx=10, pady=10, sticky="nsew")
 
-        add_button = tk.Button(buttons_frame, text="Ajouter Image", command=self.add_image)
-        add_button.pack(side=tk.LEFT, padx=10)
+        # Redimensionner les colonnes en fonction du contenu
+        for col, width in zip(("Référence", "Orientation", "Couleur", "Taille", "Défauts"), (200, 150, 100, 100, 150)):
+            self.treeview.column(col, width=width, anchor="center")
 
-        compare_button = tk.Button(buttons_frame, text="Comparer", command=self.compare_images)
-        compare_button.pack(side=tk.LEFT, padx=10)
+        # Images en bande
+        bande_images = tk.Frame(self)
+        bande_images.grid(row=2, column=0, columnspan=6, padx=10, pady=10, sticky="nsew")
 
-    def remove_image(self, clicked_label):
-        # Supprimez l'image et l'étiquette associée
-        image = self.image_labels.pop(clicked_label)
-        clicked_label.pack_forget()
-        # Assurez-vous que l'image est également supprimée de la liste des autres images
-        if image in self.other_images:
-            self.other_images.remove(image)
-        # Effacez la sélection
-        self.last_clicked_image = None
+        # Ajuster la colonne 0 pour qu'elle prenne 100% de la largeur
+        self.grid_columnconfigure(0, weight=1)
+        #définir le tag
+        self.treeview.tag_configure("colored_row", background="#ADD8E6")
 
-    def add_reference_image(self):
-        reference_file = filedialog.askopenfilename(filetypes=[("Images", "*.jpg *.jpeg *.png *.bmp")])
-        if reference_file:
-            # Supprimez l'ancienne image de référence s'il y en a une
-            if self.base_image:
-                self.remove_reference_image()
+    def charger_reference(self):
+        # Effacer tous les éléments du Treeview s'il y en a
+        if len(self.treeview.get_children()) != 0:
+            self.treeview.delete(*self.treeview.get_children())
+        # Ouvrir une boîte de dialogue pour choisir un fichier
+        fichier_reference = filedialog.askopenfilename(initialdir="./fichierImage", title="Choisir une référence", filetypes=[("Fichiers image", "*.png;*.jpg;*.jpeg;*.gif")])
 
-            self.base_image = io.imread(reference_file)
-            reference_filename = os.path.basename(reference_file)  # Extrait le nom du fichier
-            self.reference_name.set(reference_filename)  # Utilise le nom du fichier dans le champ de référence
+        # Ajouter le fichier de référence au Treeview avec une couleur spécifique
+        if fichier_reference:
+            nom_fichier = os.path.basename(fichier_reference)
+            self.treeview.insert("", "end", values=("référence", nom_fichier, "", "", "", ""), tag ="colored_row")
 
-            # Vérifiez si l'image de référence a déjà été affichée, sinon, affichez-la
-            if not self.reference_label:
-                self.display_image(self.base_image, is_reference=True)
+    def charger_image(self):
+            # Obtenez tous les éléments du Treeview
+        items = self.treeview.get_children()
 
-            # Mettez à jour le tableau avec le nom de l'image de référence
-            self.treeview.delete(*self.treeview.get_children())  # Effacez toutes les entrées précédentes
-            reference_filename = self.reference_name.get()
-            self.treeview.insert("", "end", text="Référence", values=(reference_filename, "", "", "", ""))
-            self.display_image(self,reference_file,True)
-    def display_image(self, image, is_reference=False):
-            # Convertissez l'image NumPy en format d'image PIL pour affichage
-            image_pil = Image.fromarray(image)
-            image_pil.thumbnail((200, 200))
-            photo = ImageTk.PhotoImage(image_pil)
+        # Parcourez les éléments et supprimez ceux qui n'ont pas "Référence" dans la colonne appropriée
+        for item in items:
+            values = self.treeview.item(item, 'values')
+            if values and values[0] != "référence":
+                self.treeview.delete(item)
 
-            label = tk.Label(self, image=photo, wraplength=200)
-            label.image = photo
+        # Obtenez la liste des fichiers d'images dans le répertoire ./fichierImage
+        chemin = "./fichierImage"
+        fichiers = [f for f in os.listdir(chemin) if os.path.isfile(os.path.join(chemin, f))]
 
-            if is_reference:
-                label.configure(highlightbackground="blue")
-                self.reference_label = label
-            else:
-                self.image_labels[label] = image  # Stockez l'image dans le dictionnaire
-
-            label.bind("<Button-1>", self.image_clicked)
-            label.pack(side=tk.LEFT, padx=10)
-            
-    def image_clicked(self, event):
-        clicked_label = event.widget
-        if clicked_label in self.image_labels:
-            # Supprimez l'image lorsqu'elle est cliquée
-            self.remove_image(clicked_label)
-            
-    def compare_images(self):
-        if self.base_image is not None:
-            self.comparison_results = {}  # Réinitialisez les résultats de la comparaison
-            for label, image in self.image_labels.items():
-                # Comparez l'image avec l'image de référence
-                similarity_score = self.calculate_similarity(self.base_image, image)
-
-                # Stockez le résultat de la comparaison dans le dictionnaire
-                image_id = self.get_image_id(label)
-                self.comparison_results[image_id] = similarity_score
-
-                # Mettez à jour le tableau avec le score de similarité
-                self.update_table_with_comparison_result(image_id, similarity_score)
-    
-    def calculate_similarity(self, image1, image2):
-        # Calculer le score de similarité entre les deux images
-        return ssim(image1, image2, multichannel=True)
-
-    def update_table_with_comparison_result(self, image_id, similarity_score):
-        # Mettez à jour la ligne correspondant à l'image avec le score de similarité
-        item_id = f"image_{image_id}"
-        self.treeview.item(item_id, values=("", "", "", "", similarity_score))
-
-    def get_image_id(self, label):
-        # Obtenez l'identifiant de l'image à partir de son label
-        for id, lbl in self.image_labels.items():
-            if lbl == label:
-                return id
-            
-            
-    def remove_reference_image(self):
-        self.base_image = None
-        self.reference_name.set("")
-        if self.reference_label:
-            self.reference_label.configure(borderwidth=0, highlightbackground=None)
-        self.reference_label = None
-
-        # Supprimez la ligne de l'image de référence dans le tableau
-        if self.treeview.exists("Référence"):
-            self.treeview.delete("Référence")
-
-    def add_image(self):
-        image_file = filedialog.askopenfilename(filetypes=[("Images", "*.jpg *.jpeg *.png *.bmp")])
-        if image_file:
-            image = io.imread(image_file)
-            self.other_images.append(image)
-            self.update_images()
-            print(f"Image ajoutée : {image_file}")
-
-            # Obtenez l'index de la dernière image ajoutée
-            image_index = len(self.other_images) - 1
-
-            # Ajoutez l'image au tableau avec l'index comme identifiant
-            image_filename = os.path.basename(image_file)
-            self.treeview.insert("", "end", f"image_{image_index}", values=(image_filename, "", "", "", ""))
-
-    def compare_images(self):
-        if self.base_image is not None:
-            self.comparison_results = {}  # Réinitialisez les résultats de la comparaison
-            for image_id, image in enumerate(self.other_images):
-                # Comparez l'image avec l'image de référence
-                similarity_score = self.calculate_similarity(self.base_image, image)
-
-                # Stockez le résultat de la comparaison dans le dictionnaire
-                self.comparison_results[image_id] = similarity_score
-
-                # Mettez à jour le tableau avec le score de similarité
-                self.update_table_with_comparison_result(image_id, similarity_score)
-
-    def calculate_similarity(self, image1, image2):
-        # Calculer le score de similarité entre les deux images
-        return ssim(image1, image2, multichannel=True)
-
-    def update_table_with_comparison_result(self, image_id, similarity_score):
-        # Mettez à jour la ligne correspondant à l'image avec le score de similarité
-        item_id = f"image_{image_id}"
-        self.treeview.item(item_id, values=("", "", "", "", similarity_score))
-
-    def update_images(self):
-        # Ne fait rien, car les images ne sont pas affichées
-        pass
-    def display_image(self, image, is_reference=False):
-        # Cette fonction ne fait rien, car les images ne sont pas affichées
-        pass
-    def image_clicked(self, event):
-        self.last_clicked_image = event.widget
+        # Ajoutez les fichiers d'images au Treeview
+        for fichier in fichiers:
+            self.treeview.insert("", "end", values=("", fichier, "", "", "", ""))
+        
+    def comparer():
+        pass 
+        # À vous de remplir cette partie avec la logique pour afficher les images en bande
 
 if __name__ == "__main__":
-    app = ImageComparatorApp()
+    app = MaFenetre()
     app.mainloop()

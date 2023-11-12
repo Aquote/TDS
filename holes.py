@@ -76,7 +76,7 @@ def detect_defauts(image_path, screen=False):
     return None
 
 # Exemple d'utilisation avec l'affichage de l'image
-image_path_example = "fichierImage/8.png"
+image_path_example = "fichierImage/1.png"
 centres_clusters = detect_defauts(image_path_example, screen=True)
 
 if centres_clusters is not None:
