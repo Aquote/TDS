@@ -74,7 +74,7 @@ def determine_plate_orientation(image_path):
     return angle
 
 
-image_path = "./fichierImage/6.png"
+image_path = "./fichierImage/8.png"
 orientation_angle = determine_plate_orientation(image_path)
 
 if orientation_angle is not None:

@@ -60,7 +60,7 @@ def determine_plate_color(image_path, screen=False):
     return plate_color
 
 # Exemple d'utilisation
-image_path = "./fichierImage/6.png"
+image_path = "./fichierImage/8.png"
 plate_color = determine_plate_color(image_path, screen=True)
 
 if plate_color is not None:
