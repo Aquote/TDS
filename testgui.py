@@ -1,6 +1,6 @@
 import os
 import tkinter as tk
-from tkinter import ttk, filedialog
+from tkinter import IntVar, ttk, filedialog
 
 class MaFenetre(tk.Tk):
     def __init__(self):
@@ -8,16 +8,13 @@ class MaFenetre(tk.Tk):
 
         self.title("Ma Fenêtre")
         self.geometry("1200x600")
-
         self.creer_interface()
 
     def creer_interface(self):
-        # ... (autre code)
-
+        
         # Bouton Charger Référence
         bouton_charger_ref = tk.Button(self, text="Charger référence", command=self.charger_reference)
         bouton_charger_ref.grid(row=0, column=0, padx=10, pady=10, sticky="w")
-
         # Bouton Charger Image
         bouton_charger_img = tk.Button(self, text="Charger image", command=self.charger_image)
         bouton_charger_img.grid(row=0, column=1, padx=10, pady=10, sticky="w")
@@ -29,30 +26,30 @@ class MaFenetre(tk.Tk):
             checkbox_taille.get(),
             checkbox_defauts.get()
         ))
-        bouton_comparer.grid(row=0, column=2, padx=10, pady=10, sticky="w")  # Utiliser column=2 au lieu de column=1
-
-        # Checkboxes avec valeur par défaut cochée
-        Orientation_value =tk.IntVar(value=1)
-        checkbox_orientation = tk.Checkbutton(self, text="Orientation",variable=Orientation_value)
-        self.checkbox_orientation.select()
+        bouton_comparer.grid(row=0, column=2, padx=10, pady=10, sticky="w")
+        onvalue=True
+        offvalue=False
+        
+        global checkbox_orientation, checkbox_couleur, checkbox_taille, checkbox_defauts
+        checkbox_orientation = IntVar()
+        checkbox_couleur = IntVar()
+        checkbox_taille = IntVar()
+        checkbox_defauts = IntVar()
+        
+        checkbox_orientation = tk.Checkbutton(self, text="Orientation",onvalue=onvalue, offvalue=offvalue, variable=checkbox_orientation)
         checkbox_orientation.grid(row=0, column=3, padx=10, pady=10, sticky="e")
+        checkbox_orientation.select()
 
-        Couleur_value =tk.IntVar(value=1)
-        checkbox_couleur = tk.Checkbutton(self, text="Couleur", state="active",variable=Couleur_value)
-        self.checkbox_couleur.select()
+        checkbox_couleur = tk.Checkbutton(self, text="Couleur", onvalue=onvalue, offvalue=offvalue, variable=checkbox_couleur)
         checkbox_couleur.grid(row=0, column=4, padx=10, pady=10, sticky="e")
 
-        Taille_value= tk.IntVar(value=1)
-        checkbox_taille = tk.Checkbutton(self, text="Taille",variable=Taille_value )
-        self.checkbox_taille.select()
+        checkbox_taille = tk.Checkbutton(self, text="Taille",onvalue=onvalue, offvalue=offvalue, variable=checkbox_taille)
         checkbox_taille.grid(row=0, column=5, padx=10, pady=10, sticky="e")
 
-        Défauts_value= tk.IntVar(value=1)
-        checkbox_defauts = tk.Checkbutton(self, text="Défauts",variable=Défauts_value)
-        self.checkbox_taille.select()
+        checkbox_defauts = tk.Checkbutton(self, text="Défauts",onvalue=onvalue, offvalue=offvalue, variable=checkbox_defauts)
         checkbox_defauts.grid(row=0, column=6, padx=10, pady=10, sticky="e")
 
-        # Treeview
+
         self.treeview = ttk.Treeview(self, columns=("Référence","Nom" ,"Orientation", "Couleur", "Taille", "Défauts"), show="headings")
         self.treeview.heading("Référence", text="Référence", anchor="center")
         self.treeview.heading("Nom", text="Nom", anchor="center")
@@ -62,7 +59,7 @@ class MaFenetre(tk.Tk):
         self.treeview.heading("Défauts", text="Défauts", anchor="center")
         self.treeview.grid(row=1, column=0, columnspan=6, padx=10, pady=10, sticky="nsew")
 
-        # Redimensionner les colonnes en fonction du contenu
+
         for col, width in zip(("Référence", "Orientation", "Couleur", "Taille", "Défauts"), (200, 150, 100, 100, 150)):
             self.treeview.column(col, width=width, anchor="center")
 
@@ -105,8 +102,10 @@ class MaFenetre(tk.Tk):
         for fichier in fichiers:
             self.treeview.insert("", "end", values=("", fichier, "", "", "", ""))
         
-    def comparer():
-        pass 
+    def comparer(orientation,couleur,taille,defaut):
+        pass
+       
+       
         # À vous de remplir cette partie avec la logique pour afficher les images en bande
 
 if __name__ == "__main__":
