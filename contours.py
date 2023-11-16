@@ -60,7 +60,8 @@ def detecter_contours(image_path, screen=False):
     else:
         print("Pas de contour détecté sur l'image.")
         return None
-
+"""
 # Exemple d'utilisation
 image_path = "fichierImage/8.png"
 defauts_contours = detecter_contours(image_path, screen=True)
+"""

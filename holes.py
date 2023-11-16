@@ -42,7 +42,7 @@ def detect_defauts(image_path, screen=False):
             distances_to_top_left = [int(np.linalg.norm(np.array(center) - np.array(top_left_corner))) for center in sorted_cluster_centers]
 
             # Afficher les distances
-            print("Distances entre chaque cluster et le coin supérieur gauche :", distances_to_top_left)
+            #print("Distances entre chaque cluster et le coin supérieur gauche :", distances_to_top_left)
 
             # Afficher l'image avec les points rouges aux centres des clusters
             if screen:
@@ -84,11 +84,14 @@ def detect_defauts(image_path, screen=False):
                 json.dump(json_data, json_file)
             return None
 
+
+"""
 # Exemple d'utilisation avec l'affichage de l'image
-image_path_example = "fichierImage/5.png"
+image_path_example = "fichierImage/1.png"
 centres_clusters = detect_defauts(image_path_example, screen=True)
 
 if centres_clusters is not None:
     print("Coordonnées des centres des clusters (triés) :", centres_clusters)
 else:
     print("Pas de contour détecté sur l'image ou pas assez de points noirs pour effectuer le regroupement.")
+"""

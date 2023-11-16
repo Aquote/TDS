@@ -46,24 +46,27 @@ def determine_plate_color(image_path, screen=False):
 
     filename = os.path.basename(image_path)
 
-    if os.path.exists("data.json") and os.stat("data.json").st_size != 0:
+    try:
         with open("data.json", "r") as json_file:
             json_data = json.load(json_file)
-    else:
+    except (FileNotFoundError, json.JSONDecodeError):
         json_data = {}
 
-    json_data.setdefault(filename, {}).update({"couleur": plate_color})
+    # Utilisez la méthode setdefault pour éviter une clé inexistante
+    json_data.setdefault(filename, {})["couleur"] = plate_color
 
     with open("data.json", "w") as json_file:
         json.dump(json_data, json_file)
 
     return plate_color
 
+"""
 # Exemple d'utilisation
-image_path = "./fichierImage/8.png"
+image_path = "./fichierImage/1.png"
 plate_color = determine_plate_color(image_path, screen=True)
 
 if plate_color is not None:
     print(f"La plaque est de couleur : {plate_color}")
 else:
     print("Impossible de déterminer la couleur de la plaque.")
+"""

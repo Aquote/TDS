@@ -43,14 +43,17 @@ def measure_contour_dimensions(image_path):
     else:
         json_data = {}
 
-    json_data[filename] = dimensions_data
+    # Mettez à jour le dictionnaire avec les nouvelles données sans écraser les anciennes
+    json_data[filename] = {**json_data.get(filename, {}), **dimensions_data}
 
     with open("data.json", "w") as json_file:
         json.dump(json_data, json_file)
 
     return dimensions_data
 
+"""
 # Exemple d'utilisation
-image_path = "./fichierImage/3.png"
+image_path = "./fichierImage/1.png"
 result = measure_contour_dimensions(image_path)
 print("Dimensions mesurées :", result)
+"""
