@@ -86,7 +86,7 @@ class MaFenetre(tk.Tk):
         bouton_charger_ref.grid(row=0, column=0, padx=10, pady=10, sticky="w")
 
         bouton_charger_img = tk.Button(self, text="Charger image", command=self.charger_image)
-        bouton_charger_img.grid(row=0, column=1, padx=10, pady=10, sticky="w")
+        bouton_charger_img.grid(row=0, column=1, padx=10, pady=10, sticky="Nw")
 
         self.checkbox_orientation_var = IntVar()
         self.checkbox_orientation = tk.Checkbutton(self, text="Orientation", onvalue=1, offvalue=0, variable=self.checkbox_orientation_var)
@@ -108,8 +108,11 @@ class MaFenetre(tk.Tk):
         self.checkbox_defauts.grid(row=0, column=6, padx=10, pady=10, sticky="e")
         self.checkbox_defauts.select()
 
+        bouton_mesurer = tk.Button(self, text="Mesurer", command=self.mesure)
+        bouton_mesurer.grid(row=0, column=2, padx=10, pady=10, sticky="w")
+        
         bouton_comparer = tk.Button(self, text="Comparer", command=self.comparer)
-        bouton_comparer.grid(row=0, column=2, padx=10, pady=10, sticky="w")
+        bouton_mesurer.grid(row=0, column=3, padx=10, pady=10, sticky="w")
 
         self.treeview = ttk.Treeview(self, columns=("Référence", "Nom", "Orientation", "Couleur", "Taille", "Défauts"), show="headings")
         self.treeview.heading("Référence", text="Référence", anchor="center")
@@ -156,7 +159,7 @@ class MaFenetre(tk.Tk):
         for fichier in fichiers:
             self.treeview.insert("", "end", values=("", fichier, "", "", "", ""))
 
-    def comparer(self):
+    def mesure(self):
         orientation_bool = self.checkbox_orientation_var.get()
         couleur_bool = self.checkbox_couleur_var.get()
         taille_bool = self.checkbox_taille_var.get()
@@ -200,7 +203,8 @@ class MaFenetre(tk.Tk):
 
     
     
-    
+    def comparer(self):
+        pass
     def maj_treeview(self, image_filename, results):
         item_id = None
         for item in self.treeview.get_children():
