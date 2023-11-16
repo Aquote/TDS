@@ -17,7 +17,8 @@ class ConformiteModule(tk.Frame):
     def create_widgets(self):
         self.label_orientation = tk.Label(self, text="Orientation (degrés, 0 à 90):")
         self.label_orientation.grid(row=0, column=0, pady=5, sticky="w")
-        self.entry_orientation = tk.Entry(self)
+        self.entry_orientation = tk.Entry(self)  
+        self.entry_orientation.insert(0, "0")
         self.entry_orientation.grid(row=0, column=1, pady=5)
 
         self.label_couleur = tk.Label(self, text="Couleur (peu importe):")
@@ -30,6 +31,7 @@ class ConformiteModule(tk.Frame):
         self.label_taille = tk.Label(self, text="Taille (0 à 10000):")
         self.label_taille.grid(row=2, column=0, pady=5, sticky="w")
         self.entry_taille = tk.Entry(self)
+        self.entry_taille.insert(0, "0")
         self.entry_taille.grid(row=2, column=1, pady=5)
 
         self.label_defauts = tk.Label(self, text="Défauts (peu importe):")
@@ -39,12 +41,37 @@ class ConformiteModule(tk.Frame):
         self.combo_defauts.set("Référence")
         self.combo_defauts.grid(row=3, column=1, pady=5)
 
-        # Ajout des champs de tolérance
-        self.label_tolerance_orientation = tk.Label(self, text="Tolérance Orientation (0° à 90°):")
-        self.label_tolerance_orientation.grid(row=4, column=0, pady=5, sticky="w")
-        self.entry_tolerance_orientation = tk.Entry(self)
-        self.entry_tolerance_orientation.grid(row=4, column=1, pady=5)
+        self.bouton_sauvegarder = tk.Button(self, text="Sauvegarder", command=self.getData)
+        self.bouton_sauvegarder.grid(row=4, column=0, pady=5, sticky="w")
+    
+    def setData(self):
 
+        data = {
+        "orientation" :0,
+        "couleur" : 'Référence',
+        "taille" : 0,
+        "defauts" : 'Référence'
+        }
+    def getData(self):
+        orientation = self.entry_orientation.get()
+        couleur = self.combo_couleur.get()
+        taille = self.entry_taille.get()
+        defauts = self.combo_defauts.get()
+        if orientation == "" or taille == "":
+            messagebox.showerror("Erreur", "Veuillez entrer une valeur pour l'orientation et la taille.")
+        else:
+            try:
+                orientation = int(orientation)
+                taille = int(taille)
+                if orientation < 0 or orientation > 90:
+                    messagebox.showerror("Erreur", "L'orientation doit être comprise entre 0 et 90.")
+                elif taille < 0 or taille > 10000:
+                    messagebox.showerror("Erreur", "La taille doit être comprise entre 0 et 10000.")
+                else:
+                    self.setData()
+                    print(orientation, couleur, taille, defauts)
+            except ValueError:
+                messagebox.showerror("Erreur", "L'orientation et la taille doivent être des nombres entiers.")
 class MaFenetre(tk.Tk):
     def __init__(self):
         super().__init__()
@@ -171,6 +198,9 @@ class MaFenetre(tk.Tk):
                 reference_results["defauts"] = holes.detect_defauts(reference_path, False)
             self.maj_treeview(reference_filename, reference_results)
 
+    
+    
+    
     def maj_treeview(self, image_filename, results):
         item_id = None
         for item in self.treeview.get_children():
