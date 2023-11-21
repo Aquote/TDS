@@ -11,37 +11,42 @@ import contours
 class ConformiteModule(tk.Frame):
     def __init__(self, master=None):
         super().__init__(master)
-        self.grid(row=4, column=8, sticky="S")
+        self.grid(row=0, column=8, sticky="S")
         self.create_widgets()
 
     def create_widgets(self):
-        self.label_orientation = tk.Label(self, text="Orientation (degrés, 0 à 90):")
+        # Créer un cadre pour les widgets d'entrée et de sélection
+        cadre_widgets = tk.Frame(self)
+        cadre_widgets.grid(row=0, column=2, padx=10, pady=10, sticky="nsew")
+
+        # Ajouter les widgets dans le cadre
+        self.label_orientation = tk.Label(cadre_widgets, text="Orientation (degrés, 0 à 90):")
         self.label_orientation.grid(row=0, column=0, pady=5, sticky="w")
-        self.entry_orientation = tk.Entry(self)  
+        self.entry_orientation = tk.Entry(cadre_widgets)
         self.entry_orientation.insert(0, "0")
         self.entry_orientation.grid(row=0, column=1, pady=5)
 
-        self.label_couleur = tk.Label(self, text="Couleur (peu importe):")
+        self.label_couleur = tk.Label(cadre_widgets, text="Couleur (peu importe):")
         self.label_couleur.grid(row=1, column=0, pady=5, sticky="w")
         self.couleur_options = ["Référence", "Peu Importe"]
-        self.combo_couleur = ttk.Combobox(self, values=self.couleur_options, state='readonly')
+        self.combo_couleur = ttk.Combobox(cadre_widgets, values=self.couleur_options, state='readonly')
         self.combo_couleur.set("Référence")
         self.combo_couleur.grid(row=1, column=1, pady=5)
 
-        self.label_taille = tk.Label(self, text="Taille (0 à 10000):")
+        self.label_taille = tk.Label(cadre_widgets, text="Taille (0 à 10000):")
         self.label_taille.grid(row=2, column=0, pady=5, sticky="w")
-        self.entry_taille = tk.Entry(self)
+        self.entry_taille = tk.Entry(cadre_widgets)
         self.entry_taille.insert(0, "0")
         self.entry_taille.grid(row=2, column=1, pady=5)
 
-        self.label_defauts = tk.Label(self, text="Défauts (peu importe):")
+        self.label_defauts = tk.Label(cadre_widgets, text="Défauts (peu importe):")
         self.label_defauts.grid(row=3, column=0, pady=5, sticky="w")
         self.defauts_options = ["Référence", "Peu Importe"]
-        self.combo_defauts = ttk.Combobox(self, values=self.defauts_options, state='readonly')
+        self.combo_defauts = ttk.Combobox(cadre_widgets, values=self.defauts_options, state='readonly')
         self.combo_defauts.set("Référence")
         self.combo_defauts.grid(row=3, column=1, pady=5)
 
-        self.bouton_sauvegarder = tk.Button(self, text="Sauvegarder", command=self.getData)
+        self.bouton_sauvegarder = tk.Button(cadre_widgets, text="Sauvegarder", command=self.getData)
         self.bouton_sauvegarder.grid(row=4, column=0, pady=5, sticky="w")
     
     def setData(self):
@@ -81,54 +86,77 @@ class MaFenetre(tk.Tk):
         self.creer_interface()
         self.conformite_module = ConformiteModule(self)
 
+        
     def creer_interface(self):
-        bouton_charger_ref = tk.Button(self, text="Charger référence", command=self.charger_reference)
-        bouton_charger_ref.grid(row=0, column=0, padx=10, pady=10, sticky="w")
+        # Cadre principal
+        cadre_principal = tk.Frame(self)
+        cadre_principal.grid(row=0, column=0, padx=10, pady=10, sticky="w")
 
-        bouton_charger_img = tk.Button(self, text="Charger image", command=self.charger_image)
-        bouton_charger_img.grid(row=0, column=1, padx=10, pady=10, sticky="Nw")
+        # Cadre pour les boutons de chargement
+        cadre_chargement = tk.Frame(cadre_principal)
+        cadre_chargement.grid(row=0, column=0, padx=10, pady=10, sticky="w")
 
-        self.checkbox_orientation_var = IntVar()
-        self.checkbox_orientation = tk.Checkbutton(self, text="Orientation", onvalue=1, offvalue=0, variable=self.checkbox_orientation_var)
-        self.checkbox_orientation.grid(row=0, column=3, padx=10, pady=10, sticky="e")
+        bouton_charger_ref = tk.Button(cadre_chargement, text="Charger référence", command=self.charger_reference, width=15, height=2)
+        bouton_charger_ref.grid(row=0, column=0, padx=10, pady=5, sticky="w")
+
+        bouton_charger_img = tk.Button(cadre_chargement, text="Charger image", command=self.charger_image, width=15, height=2)
+        bouton_charger_img.grid(row=1, column=0, padx=10, pady=5, sticky="w")
+
+        # Cadre pour les boutons d'actions
+        cadre_boutons_actions = tk.Frame(cadre_principal)
+        cadre_boutons_actions.grid(row=0, column=1, padx=10, pady=10, sticky="w")
+
+        bouton_mesurer = tk.Button(cadre_boutons_actions, text="Mesurer", command=self.mesure, width=15, height=2)
+        bouton_mesurer.grid(row=0, column=0, padx=10, pady=5, sticky="w")
+
+        bouton_comparer = tk.Button(cadre_boutons_actions, text="Comparer", command=self.comparer, width=15, height=2)
+        bouton_comparer.grid(row=1, column=0, padx=10, pady=5, sticky="w")
+
+        # Cadre pour les cases à cocher
+        cadre_cases_a_cocher = tk.Frame(self)
+        cadre_cases_a_cocher.grid(row=0, column=2, padx=10, pady=10, sticky="nw")
+
+        self.checkbox_orientation_var = tk.IntVar()
+        self.checkbox_orientation = tk.Checkbutton(cadre_cases_a_cocher, text="Orientation", onvalue=1, offvalue=0, variable=self.checkbox_orientation_var)
+        self.checkbox_orientation.grid(row=0, column=0, padx=10, pady=5, sticky="w")
         self.checkbox_orientation.select()
 
-        self.checkbox_couleur_var = IntVar()
-        self.checkbox_couleur = tk.Checkbutton(self, text="Couleur", onvalue=1, offvalue=0, variable=self.checkbox_couleur_var)
-        self.checkbox_couleur.grid(row=0, column=4, padx=10, pady=10, sticky="e")
+        self.checkbox_couleur_var = tk.IntVar()
+        self.checkbox_couleur = tk.Checkbutton(cadre_cases_a_cocher, text="Couleur", onvalue=1, offvalue=0, variable=self.checkbox_couleur_var)
+        self.checkbox_couleur.grid(row=1, column=0, padx=10, pady=5, sticky="w")
         self.checkbox_couleur.select()
 
-        self.checkbox_taille_var = IntVar()
-        self.checkbox_taille = tk.Checkbutton(self, text="Taille", onvalue=1, offvalue=0, variable=self.checkbox_taille_var)
-        self.checkbox_taille.grid(row=0, column=5, padx=10, pady=10, sticky="e")
+        self.checkbox_taille_var = tk.IntVar()
+        self.checkbox_taille = tk.Checkbutton(cadre_cases_a_cocher, text="Taille", onvalue=1, offvalue=0, variable=self.checkbox_taille_var)
+        self.checkbox_taille.grid(row=2, column=0, padx=10, pady=5, sticky="w")
         self.checkbox_taille.select()
 
-        self.checkbox_defauts_var = IntVar()
-        self.checkbox_defauts = tk.Checkbutton(self, text="Défauts", onvalue=1, offvalue=0, variable=self.checkbox_defauts_var)
-        self.checkbox_defauts.grid(row=0, column=6, padx=10, pady=10, sticky="e")
+        self.checkbox_defauts_var = tk.IntVar()
+        self.checkbox_defauts = tk.Checkbutton(cadre_cases_a_cocher, text="Défauts", onvalue=1, offvalue=0, variable=self.checkbox_defauts_var)
+        self.checkbox_defauts.grid(row=3, column=0, padx=10, pady=5, sticky="w")
         self.checkbox_defauts.select()
 
-        bouton_mesurer = tk.Button(self, text="Mesurer", command=self.mesure)
-        bouton_mesurer.grid(row=0, column=2, padx=10, pady=10, sticky="w")
-        
-        bouton_comparer = tk.Button(self, text="Comparer", command=self.comparer)
-        bouton_mesurer.grid(row=0, column=3, padx=10, pady=10, sticky="w")
+        # Cadre pour le Treeview
+        cadre_treeview = tk.Frame(self)
+        cadre_treeview.grid(row=1, column=0, columnspan=4, padx=10, pady=10, sticky="nsew")
 
-        self.treeview = ttk.Treeview(self, columns=("Référence", "Nom", "Orientation", "Couleur", "Taille", "Défauts"), show="headings")
+        self.treeview = ttk.Treeview(cadre_treeview, columns=("Référence", "Nom", "Orientation", "Couleur", "Taille", "Défauts"), show="headings")
         self.treeview.heading("Référence", text="Référence", anchor="center")
         self.treeview.heading("Nom", text="Nom", anchor="center")
         self.treeview.heading("Orientation", text="Orientation", anchor="center")
         self.treeview.heading("Couleur", text="Couleur", anchor="center")
         self.treeview.heading("Taille", text="Taille", anchor="center")
         self.treeview.heading("Défauts", text="Défauts", anchor="center")
-        self.treeview.grid(row=1, column=0, columnspan=8, padx=10, pady=10, sticky="nsew")
+        self.treeview.grid(row=0, column=0, padx=10, pady=10, sticky="nsew")
 
-        for col, width in zip(("Référence", "Orientation", "Couleur", "Taille", "Défauts"), (200, 150, 100, 100, 150)):
+        for col, width in zip(("Référence", "Orientation", "Couleur", "Taille", "Défauts"), (100, 150, 100, 100, 150)):
             self.treeview.column(col, width=width, anchor="center")
 
+        # Cadre pour les images
         bande_images = tk.Frame(self)
-        bande_images.grid(row=2, column=0, columnspan=8, padx=10, pady=10, sticky="nsew")
+        bande_images.grid(row=2, column=0, columnspan=3, padx=10, pady=10, sticky="nsew")
 
+        # Définition de la couleur de fond de la référence
         self.grid_columnconfigure(0, weight=1)
         self.treeview.tag_configure("colored_row", background="#ADD8E6")
 
@@ -201,10 +229,9 @@ class MaFenetre(tk.Tk):
                 reference_results["defauts"] = holes.detect_defauts(reference_path, False)
             self.maj_treeview(reference_filename, reference_results)
 
-    
-    
     def comparer(self):
         pass
+
     def maj_treeview(self, image_filename, results):
         item_id = None
         for item in self.treeview.get_children():
