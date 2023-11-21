@@ -185,7 +185,14 @@ class MaFenetre(tk.Tk):
         chemin = "./fichierImage"
         fichiers = [f for f in os.listdir(chemin) if os.path.isfile(os.path.join(chemin, f)) and f != reference_filename]
         for fichier in fichiers:
-            self.treeview.insert("", "end", values=("", fichier, "", "", "", ""))
+            already_exists = False
+            for item in items:
+                values = self.treeview.item(item, 'values')
+                if values and values[1] == fichier:
+                    already_exists = True
+                    break
+            if not already_exists:
+                self.treeview.insert("", "end", values=("", fichier, "", "", "", ""))
 
     def mesure(self):
         orientation_bool = self.checkbox_orientation_var.get()
