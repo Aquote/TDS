@@ -82,9 +82,13 @@ class MaFenetre(tk.Tk):
         super().__init__()
 
         self.title("É-plaqué")
-        self.geometry("1200x600")
+        self.geometry("1200x750")
         self.creer_interface()
         self.conformite_module = ConformiteModule(self)
+
+        self.reference_image = None  # Pour stocker l'image de référence
+        self.current_selected_image_path = None
+        self.label_image = None  # Initialisez à None pour pouvoir vérifier plus tard s'il faut créer ou mettre à jour l'image
 
         
     def creer_interface(self):
@@ -169,6 +173,11 @@ class MaFenetre(tk.Tk):
             self.treeview.insert("", "end", values=("référence", nom_fichier, "", "", "", ""), tag ="colored_row")
             self.vider_json()
 
+            # Charger l'image de référence et l'afficher dans l'interface
+            self.reference_image = tk.PhotoImage(file=fichier_reference).subsample(20)
+            self.label_reference = tk.Label(self, image=self.reference_image)
+            self.label_reference.grid(row=3, column=0, padx=10, pady=10, sticky="w")
+
     def vider_json(self):
         json_data = {}
         with open("data.json", "w") as json_file:
@@ -193,6 +202,17 @@ class MaFenetre(tk.Tk):
                     break
             if not already_exists:
                 self.treeview.insert("", "end", values=("", fichier, "", "", "", ""))
+                self.current_selected_image_path = os.path.join("./fichierImage", fichier)  # Mettre à jour le chemin de l'image sélectionnée ici
+        # Ajout d'un événement pour sélectionner une image dans le treeview
+        self.treeview.bind("<<TreeviewSelect>>", self.selectionner_image)
+
+    def selectionner_image(self, event):
+        selected_item = self.treeview.selection()[0]  # Obtenir l'élément sélectionné dans le treeview
+        values = self.treeview.item(selected_item, 'values')
+        if values and values[0] != "référence":  # Vérifier si l'élément sélectionné n'est pas la référence
+            image_filename = values[1]
+            self.current_selected_image_path = os.path.join("./fichierImage", image_filename)
+            self.afficher_image_reference()
 
     def mesure(self):
         orientation_bool = self.checkbox_orientation_var.get()
@@ -236,8 +256,22 @@ class MaFenetre(tk.Tk):
                 reference_results["defauts"] = holes.detect_defauts(reference_path, False)
             self.maj_treeview(reference_filename, reference_results)
 
+    def afficher_image_reference(self):
+        if self.current_selected_image_path:
+            if self.label_image:
+                self.label_image.grid_forget()  # Dissocie l'image de la grille sans la détruire
+                self.label_image = None  # Réinitialise la référence à l'image
+
+            new_photo = tk.PhotoImage(file=self.current_selected_image_path).subsample(20)
+            self.label_image = tk.Label(self, image=new_photo)
+            self.label_image.image = new_photo
+            self.label_image.grid(row=3, column=1, padx=10, pady=10, sticky="w")
+
+
     def comparer(self):
         pass
+        # Autres traitements de comparaison si nécessaire
+
 
     def maj_treeview(self, image_filename, results):
         item_id = None
@@ -257,6 +291,12 @@ class MaFenetre(tk.Tk):
             if "defauts" in results:
                 self.treeview.set(item_id, "Défauts", "Oui" if results["defauts"] else "Non")
 
+            # Mise à jour de self.current_selected_image_path
+            self.current_selected_image_path = os.path.join("./fichierImage", image_filename)
+
+            # Affichage de l'image référente
+            self.afficher_image_reference()
+    
 if __name__ == "__main__":
     app = MaFenetre()
     app.mainloop()
