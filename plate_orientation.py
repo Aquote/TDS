@@ -73,11 +73,12 @@ def determine_plate_orientation(image_path):
 
     return angle
 
-
-image_path = "./fichierImage/8.png"
+"""
+image_path = "./fichierImage/1.png"
 orientation_angle = determine_plate_orientation(image_path)
 
 if orientation_angle is not None:
     print(f"L'angle d'orientation de la plaque est : {orientation_angle} degrés.")
 else:
     print("Impossible de déterminer l'orientation de la plaque.")
+"""
