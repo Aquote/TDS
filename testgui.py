@@ -1,7 +1,12 @@
 import json
+from math import e
 import os
+import re
 import tkinter as tk
 from tkinter import IntVar, ttk, filedialog, messagebox
+from turtle import width
+
+from matplotlib.pylab import f
 import plate_orientation
 import plate_color
 import plate_size
@@ -28,9 +33,9 @@ class ConformiteModule(tk.Frame):
 
         self.label_couleur = tk.Label(cadre_widgets, text="Couleur (peu importe):")
         self.label_couleur.grid(row=1, column=0, pady=5, sticky="w")
-        self.couleur_options = ["Référence", "Peu Importe"]
+        self.couleur_options = ["Reference", "Peu Importe"]
         self.combo_couleur = ttk.Combobox(cadre_widgets, values=self.couleur_options, state='readonly')
-        self.combo_couleur.set("Référence")
+        self.combo_couleur.set("Reference")
         self.combo_couleur.grid(row=1, column=1, pady=5)
 
         self.label_taille = tk.Label(cadre_widgets, text="Taille (0 à 10000):")
@@ -41,22 +46,15 @@ class ConformiteModule(tk.Frame):
 
         self.label_defauts = tk.Label(cadre_widgets, text="Défauts (peu importe):")
         self.label_defauts.grid(row=3, column=0, pady=5, sticky="w")
-        self.defauts_options = ["Référence", "Peu Importe"]
+        self.defauts_options = ["Reference", "Peu Importe"]
         self.combo_defauts = ttk.Combobox(cadre_widgets, values=self.defauts_options, state='readonly')
-        self.combo_defauts.set("Référence")
+        self.combo_defauts.set("Reference")
         self.combo_defauts.grid(row=3, column=1, pady=5)
 
         self.bouton_sauvegarder = tk.Button(cadre_widgets, text="Sauvegarder", command=self.getData)
         self.bouton_sauvegarder.grid(row=4, column=0, pady=5, sticky="w")
     
-    def setData(self):
-
-        data = {
-        "orientation" :0,
-        "couleur" : 'Référence',
-        "taille" : 0,
-        "defauts" : 'Référence'
-        }
+    
     def getData(self):
         orientation = self.entry_orientation.get()
         couleur = self.combo_couleur.get()
@@ -73,10 +71,18 @@ class ConformiteModule(tk.Frame):
                 elif taille < 0 or taille > 10000:
                     messagebox.showerror("Erreur", "La taille doit être comprise entre 0 et 10000.")
                 else:
-                    self.setData()
+                    data = {
+                        "orientation": orientation,
+                        "couleur": couleur,
+                        "taille": taille,
+                        "defauts": defauts
+                    }
+                    with open("tolerance.json", "w") as file:
+                        json.dump(data, file)
                     print(orientation, couleur, taille, defauts)
             except ValueError:
                 messagebox.showerror("Erreur", "L'orientation et la taille doivent être des nombres entiers.")
+
 class MaFenetre(tk.Tk):
     def __init__(self):
         super().__init__()
@@ -86,7 +92,7 @@ class MaFenetre(tk.Tk):
         self.creer_interface()
         self.conformite_module = ConformiteModule(self)
 
-        self.reference_image = None  # Pour stocker l'image de référence
+        self.reference_image = None  # Pour stocker l'image de Reference
         self.current_selected_image_path = None
         self.label_image = None  # Initialisez à None pour pouvoir vérifier plus tard s'il faut créer ou mettre à jour l'image
 
@@ -100,7 +106,7 @@ class MaFenetre(tk.Tk):
         cadre_chargement = tk.Frame(cadre_principal)
         cadre_chargement.grid(row=0, column=0, padx=10, pady=10, sticky="w")
 
-        bouton_charger_ref = tk.Button(cadre_chargement, text="Charger référence", command=self.charger_reference, width=15, height=2)
+        bouton_charger_ref = tk.Button(cadre_chargement, text="Charger Reference", command=self.charger_reference, width=15, height=2)
         bouton_charger_ref.grid(row=0, column=0, padx=10, pady=5, sticky="w")
 
         bouton_charger_img = tk.Button(cadre_chargement, text="Charger image", command=self.charger_image, width=15, height=2)
@@ -113,7 +119,7 @@ class MaFenetre(tk.Tk):
         bouton_mesurer = tk.Button(cadre_boutons_actions, text="Mesurer", command=self.mesure, width=15, height=2)
         bouton_mesurer.grid(row=0, column=0, padx=10, pady=5, sticky="w")
 
-        bouton_comparer = tk.Button(cadre_boutons_actions, text="Comparer", command=self.comparer, width=15, height=2)
+        bouton_comparer = tk.Button(cadre_boutons_actions, text="Comparer", command=self.comparer_tout, width=15, height=2)
         bouton_comparer.grid(row=1, column=0, padx=10, pady=5, sticky="w")
 
         # Cadre pour les cases à cocher
@@ -144,8 +150,8 @@ class MaFenetre(tk.Tk):
         cadre_treeview = tk.Frame(self)
         cadre_treeview.grid(row=1, column=0, columnspan=4, padx=10, pady=10, sticky="nsew")
 
-        self.treeview = ttk.Treeview(cadre_treeview, columns=("Référence", "Nom", "Orientation", "Couleur", "Taille", "Défauts"), show="headings")
-        self.treeview.heading("Référence", text="Référence", anchor="center")
+        self.treeview = ttk.Treeview(cadre_treeview, columns=("Reference", "Nom", "Orientation", "Couleur", "Taille", "Défauts"), show="headings")
+        self.treeview.heading("Reference", text="Reference", anchor="center")
         self.treeview.heading("Nom", text="Nom", anchor="center")
         self.treeview.heading("Orientation", text="Orientation", anchor="center")
         self.treeview.heading("Couleur", text="Couleur", anchor="center")
@@ -153,27 +159,29 @@ class MaFenetre(tk.Tk):
         self.treeview.heading("Défauts", text="Défauts", anchor="center")
         self.treeview.grid(row=0, column=0, padx=10, pady=10, sticky="nsew")
 
-        for col, width in zip(("Référence", "Orientation", "Couleur", "Taille", "Défauts"), (100, 150, 100, 100, 150)):
+        for col, width in zip(("Reference", "Orientation", "Couleur", "Taille", "Défauts"), (100, 150, 100, 100, 150)):
             self.treeview.column(col, width=width, anchor="center")
 
         # Cadre pour les images
         bande_images = tk.Frame(self)
         bande_images.grid(row=2, column=0, columnspan=3, padx=10, pady=10, sticky="nsew")
 
-        # Définition de la couleur de fond de la référence
+        # Définition de la couleur de fond de la Reference
         self.grid_columnconfigure(0, weight=1)
         self.treeview.tag_configure("colored_row", background="#ADD8E6")
+        self.treeview.tag_configure("red_row", background="#FF0000")
+        self.treeview.tag_configure("green_row", background="#008000")
 
     def charger_reference(self):
         if len(self.treeview.get_children()) != 0:
             self.treeview.delete(*self.treeview.get_children())
-        fichier_reference = filedialog.askopenfilename(initialdir="./fichierImage", title="Choisir une référence", filetypes=[("Fichiers image", "*.png;*.jpg;*.jpeg;*.gif")])
+        fichier_reference = filedialog.askopenfilename(initialdir="./fichierImage", title="Choisir une Reference", filetypes=[("Fichiers image", "*.png;*.jpg;*.jpeg;*.gif")])
         if fichier_reference:
             nom_fichier = os.path.basename(fichier_reference)
-            self.treeview.insert("", "end", values=("référence", nom_fichier, "", "", "", ""), tag ="colored_row")
+            self.treeview.insert("", "end", values=("Reference", nom_fichier, "", "", "", ""), tag ="colored_row")
             self.vider_json()
 
-            # Charger l'image de référence et l'afficher dans l'interface
+            # Charger l'image de Reference et l'afficher dans l'interface
             self.reference_image = tk.PhotoImage(file=fichier_reference).subsample(20)
             self.label_reference = tk.Label(self, image=self.reference_image)
             self.label_reference.grid(row=3, column=0, padx=10, pady=10, sticky="w")
@@ -188,7 +196,7 @@ class MaFenetre(tk.Tk):
         reference_filename = None
         for item in items:
             values = self.treeview.item(item, 'values')
-            if values and values[0] == "référence":
+            if values and values[0] == "Reference":
                 reference_filename = values[1]
                 break
         chemin = "./fichierImage"
@@ -209,7 +217,7 @@ class MaFenetre(tk.Tk):
     def selectionner_image(self, event):
         selected_item = self.treeview.selection()[0]  # Obtenir l'élément sélectionné dans le treeview
         values = self.treeview.item(selected_item, 'values')
-        if values and values[0] != "référence":  # Vérifier si l'élément sélectionné n'est pas la référence
+        if values and values[0] != "Reference":  # Vérifier si l'élément sélectionné n'est pas la Reference
             image_filename = values[1]
             self.current_selected_image_path = os.path.join("./fichierImage", image_filename)
             self.afficher_image_reference()
@@ -239,7 +247,7 @@ class MaFenetre(tk.Tk):
         reference_item = None
         for item in items:
             values = self.treeview.item(item, 'values')
-            if values and values[0] == "référence":
+            if values and values[0] == "Reference":
                 reference_item = item
                 break
         if reference_item:
@@ -260,7 +268,7 @@ class MaFenetre(tk.Tk):
         if self.current_selected_image_path:
             if self.label_image:
                 self.label_image.grid_forget()  # Dissocie l'image de la grille sans la détruire
-                self.label_image = None  # Réinitialise la référence à l'image
+                self.label_image = None  # Réinitialise la Reference à l'image
 
             new_photo = tk.PhotoImage(file=self.current_selected_image_path).subsample(20)
             self.label_image = tk.Label(self, image=new_photo)
@@ -268,9 +276,83 @@ class MaFenetre(tk.Tk):
             self.label_image.grid(row=3, column=1, padx=10, pady=10, sticky="w")
 
 
-    def comparer(self):
-        pass
-        # Autres traitements de comparaison si nécessaire
+    def comparer_orientation(self,reference_item,value,tolerance):
+            lower_orientation = reference_item - tolerance
+            upper_orientation = reference_item + tolerance
+            if lower_orientation <= value <= upper_orientation:
+                return True
+            else:
+                return False
+
+    def comparer_couleur(self,reference_item,value,tolerance):
+            if tolerance == "Reference":
+                if value == reference_item:
+                    return True
+                else:
+                    return False
+            else:
+                return True
+               
+            
+    def comparer_taille(self,reference_item,values,tolerance):
+ 
+        widthref, heightref = map(int,reference_item.split(" x "))
+        width, height = map(int,values.split(" x "))
+
+        lower_taille_width= widthref - tolerance
+        upper_taille_width = widthref+ tolerance
+
+        lower_taille_height = heightref - tolerance
+        upper_taille_height = heightref + tolerance
+
+        if (lower_taille_width <= width <= upper_taille_width) and (lower_taille_height <= height <= upper_taille_height):
+            return True
+        else:
+            return False
+                  
+
+    def comparer_defauts(self,reference_item,values,tolerance):
+        if tolerance == "Reference":
+            if values == reference_item:
+                return True
+            else:
+                return False
+                    
+        else:
+            return True
+                
+    def comparer_tout(self):
+        # Load tolerance data from "tolerance.json"
+        with open("tolerance.json", "r") as file:
+            tolerance = json.load(file)
+
+        # Get the reference item
+        reference_item = None
+        items = self.treeview.get_children()
+        for item in items:
+            values = self.treeview.item(item, 'values')
+            if values and values[0] == "Reference":
+                reference_item = values
+                break
+
+        if not reference_item:
+            messagebox.showerror("Erreur", "Veuillez charger une image de référence.")
+            return
+
+        for item in items:
+            values = self.treeview.item(item, 'values')
+            if not values or values[0] == "Reference":
+                continue
+
+            is_orientation_ok = self.comparer_orientation(reference_item[2], values[2], tolerance["orientation"])
+            is_couleur_ok = self.comparer_couleur(reference_item[3], values[3], tolerance["couleur"])
+            is_taille_ok = self.comparer_taille(reference_item[4], values[4], tolerance["taille"])
+            is_defauts_ok = self.comparer_defauts(reference_item[5], values[5], tolerance["defauts"])
+
+            if all([is_orientation_ok, is_couleur_ok, is_taille_ok, is_defauts_ok]):
+                self.treeview.item(item, tags="green_row")
+            else:
+                self.treeview.item(item, tags="red_row")
 
 
     def maj_treeview(self, image_filename, results):
