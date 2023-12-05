@@ -169,8 +169,8 @@ class MaFenetre(tk.Tk):
         # Définition de la couleur de fond de la Reference
         self.grid_columnconfigure(0, weight=1)
         self.treeview.tag_configure("colored_row", background="#ADD8E6")
-        self.treeview.tag_configure("red_row", background="#FF0000")
-        self.treeview.tag_configure("green_row", background="#008000")
+        self.treeview.tag_configure("red_row", background="#FBAA99")
+        self.treeview.tag_configure("green_row", background="#77DD77")
 
     def charger_reference(self):
         if len(self.treeview.get_children()) != 0:
