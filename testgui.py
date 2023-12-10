@@ -277,12 +277,15 @@ class MaFenetre(tk.Tk):
 
 
     def comparer_orientation(self,reference_item,value,tolerance):
+        if value != '' or reference_item != '':
             lower_orientation = reference_item - tolerance
             upper_orientation = reference_item + tolerance
             if lower_orientation <= value <= upper_orientation:
                 return True
             else:
                 return False
+        else:
+            return True
 
     def comparer_couleur(self,reference_item,value,tolerance):
             if tolerance == "Reference":
@@ -295,21 +298,25 @@ class MaFenetre(tk.Tk):
                
             
     def comparer_taille(self,reference_item,values,tolerance):
+        
+        if values != '' or reference_item != '':
  
-        widthref, heightref = map(int,reference_item.split(" x "))
-        width, height = map(int,values.split(" x "))
+            widthref, heightref = map(int,reference_item.split(" x "))
+            width, height = map(int,values.split(" x "))
 
-        lower_taille_width= widthref - tolerance
-        upper_taille_width = widthref+ tolerance
+            lower_taille_width= widthref - tolerance
+            upper_taille_width = widthref+ tolerance
 
-        lower_taille_height = heightref - tolerance
-        upper_taille_height = heightref + tolerance
+            lower_taille_height = heightref - tolerance
+            upper_taille_height = heightref + tolerance
 
-        if (lower_taille_width <= width <= upper_taille_width) and (lower_taille_height <= height <= upper_taille_height):
-            return True
+            if (lower_taille_width <= width <= upper_taille_width) and (lower_taille_height <= height <= upper_taille_height):
+                return True
+            else:
+                return False
+            
         else:
-            return False
-                  
+            return True
 
     def comparer_defauts(self,reference_item,values,tolerance):
         if tolerance == "Reference":
